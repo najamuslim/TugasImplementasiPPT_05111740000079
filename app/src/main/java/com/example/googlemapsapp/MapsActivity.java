@@ -3,6 +3,7 @@ package com.example.googlemapsapp;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.FragmentActivity;
 
+import android.content.Intent;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
@@ -28,6 +29,7 @@ import java.util.List;
 public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback {
 
     private GoogleMap mMap;
+    Button btnDetect;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,6 +38,9 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+
+        btnDetect = findViewById(R.id.btnDetectMe);
+        btnDetect.setOnClickListener(op);
 
         Button go = (Button) findViewById(R.id.idGo);
         go.setOnClickListener(op);
@@ -52,14 +57,31 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                     gotoLokasi();break;
                 case R.id.idCari:
                     goCari();break;
+                case R.id.btnDetectMe:
+                    startActivity(new Intent(MapsActivity.this, DetectMeActivity.class));
+                    break;
             }
         }
     };
 
     private void goCari() {
         EditText tempat = (EditText) findViewById(R.id.idDaerah);
-        Geocoder g = new Geocoder(getBaseContext());
+        if (tempat.getText().toString().isEmpty()) {
+            Toast.makeText(this, "Harap mengisi isian search!", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        EditText zoom = (EditText) findViewById(R.id.idZoom);
+        EditText lat = (EditText) findViewById(R.id.idLokasiLat);
+        EditText lng = (EditText) findViewById(R.id.idLokasiLng);
+        if(zoom.getText().toString().isEmpty() || lat.getText().toString().isEmpty() || lng.getText().toString().isEmpty()) {
+            Toast.makeText(this, "Harap mengisi isian zoom, latitude dan longitude!", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        else {
+
+        }
         try {
+            Geocoder g = new Geocoder(getBaseContext());
             List<android.location.Address> daftar = g.getFromLocationName(tempat.getText().toString(), 1);
             Address alamat = daftar.get(0);
             String nemuAlamat = alamat.getAddressLine(0);
@@ -68,14 +90,13 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
             Toast.makeText(getBaseContext(),"Ketemu " + nemuAlamat,Toast.LENGTH_LONG).show();
 
-            EditText zoom = (EditText) findViewById(R.id.idZoom);
-            Float dblzoom = Float.parseFloat(zoom.getText().toString());
             Toast.makeText(this,"Move to "+ nemuAlamat +" Lat:" +
 
+
                     lintang + " Long:" +bujur,Toast.LENGTH_LONG).show();
+
+            Float dblzoom = Float.parseFloat(zoom.getText().toString());
             gotoPeta(lintang,bujur,dblzoom);
-            EditText lat = (EditText) findViewById(R.id.idLokasiLat);
-            EditText lng = (EditText) findViewById(R.id.idLokasiLng);
             Double dbllat = Double.parseDouble(lat.getText().toString());
             Double dbllng = Double.parseDouble(lng.getText().toString());
             hitungJarak(dbllat,dbllng,lintang,bujur);
@@ -102,15 +123,23 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
         private void gotoLokasi() {
-                EditText lat = (EditText) findViewById(R.id.idLokasiLat);
-                EditText lng = (EditText) findViewById(R.id.idLokasiLng);
-                EditText zoom = (EditText) findViewById(R.id.idZoom);
+            EditText lat = (EditText) findViewById(R.id.idLokasiLat);
+            EditText lng = (EditText) findViewById(R.id.idLokasiLng);
+            EditText zoom = (EditText) findViewById(R.id.idZoom);
+            if(zoom.getText().toString().isEmpty() || lat.getText().toString().isEmpty() || lng.getText().toString().isEmpty()) {
+                Toast.makeText(this, "Harap mengisi isian zoom, latitude dan longitude!", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            try {
                 Double dbllat = Double.parseDouble(lat.getText().toString());
                 Double dbllng = Double.parseDouble(lng.getText().toString());
                 Float dblzoom = Float.parseFloat(zoom.getText().toString());
-                Toast.makeText(this,"Move to Lat:" +dbllat + " Long:"
-                +dbllng,Toast.LENGTH_LONG).show();
-                gotoPeta(dbllat,dbllng,dblzoom);
+                Toast.makeText(this, "Move to Lat:" + dbllat + " Long:"
+                        + dbllng, Toast.LENGTH_LONG).show();
+                gotoPeta(dbllat, dbllng, dblzoom);
+            } catch (Exception e){
+                e.printStackTrace();
+            }
         }
 
 
