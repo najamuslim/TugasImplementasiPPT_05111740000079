@@ -1,87 +1,148 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_height="match_parent"
-    tools:context=".MapsActivity"
-    android:orientation="vertical">
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
-        <EditText
-            android:id="@+id/idLokasiLat"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="0.5"/>
+    android:layout_width="match_parent"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
+    android:weightSum="12">
 
-        <EditText
-            android:id="@+id/idLokasiLng"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_weight="0.5" />
-    </LinearLayout>
-    <LinearLayout
+    <fragment
+        android:id="@+id/map"
+        android:name="com.google.android.gms.maps.SupportMapFragment"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
-        <EditText
-            android:id="@+id/idZoom"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="0.5"/>
-        <Button
-            android:id="@+id/idGo"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="100px"
-            android:layout_marginRight="100px"
-            android:layout_weight="0.5"
-            android:text="Go"/>
-    </LinearLayout>
+        android:layout_height="0dp"
+        android:layout_weight="8"
+        tools:context=".MapsActivity" />
+
     <LinearLayout
+        android:layout_weight="4"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
-        <EditText
-            android:id="@+id/idDaerah"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="0.5"/>
-        <Button
-            android:id="@+id/idCari"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="100px"
-            android:layout_marginRight="100px"
-            android:layout_weight="0.5"
-            android:text="cari"/>
-    </LinearLayout>
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="0dp"
         android:orientation="vertical">
-        <fragment
-            android:id="@+id/map"
-            android:name="com.google.android.gms.maps.SupportMapFragment"
+
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_weight="0.4"
-            tools:context=".MapsActivity" />
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="8dp">
+
             <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_weight="1"
+                android:layout_margin="8dp">
 
-                <Button
-                    android:id="@+id/btnDetectMe"
-                    android:layout_width="match_parent"
+                <TextView
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Detect me">
+                    android:text="Longitude"
+                    android:textSize="14sp"/>
 
-                </Button>
+                <TextView
+                    android:id="@+id/tvLongitude"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="1.5665745"
+                    android:textSize="18sp"
+                    android:layout_marginTop="8dp"/>
 
             </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_weight="1"
+                android:layout_margin="8dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Latitude"
+                    android:textSize="14sp"/>
+
+                <TextView
+                    android:id="@+id/tvLatitude"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="1.5665745"
+                    android:textSize="18sp"
+                    android:layout_marginTop="8dp"/>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="8dp">
+
+            <EditText
+                android:id="@+id/etLongitude"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="16dp"
+                android:hint="Long"
+                android:layout_weight="1"
+                android:inputType="numberDecimal"
+                android:textSize="18sp"/>
+
+            <EditText
+                android:id="@+id/etLatitude"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="16dp"
+                android:hint="Lat"
+                android:layout_weight="1"
+                android:inputType="numberDecimal"
+                android:textSize="18sp"/>
+
+            <EditText
+                android:id="@+id/etZoom"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="16dp"
+                android:hint="Zoom"
+                android:layout_weight="1"
+                android:inputType="numberDecimal"
+                android:textSize="18sp"/>
+
+
+            <ImageButton
+                android:id="@+id/btnGo"
+                android:layout_width="56dp"
+                android:layout_height="match_parent"
+                android:src="@drawable/ic_send"
+                style="@style/Base.Widget.AppCompat.Button.Borderless" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="8dp">
+
+            <EditText
+                android:id="@+id/etAddress"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:padding="16dp"
+                android:hint="Cari Alamat"
+                android:layout_weight="1"
+                android:textSize="18sp"/>
+
+            <ImageButton
+                android:id="@+id/btnSearch"
+                android:layout_width="56dp"
+                android:layout_height="match_parent"
+                android:src="@drawable/ic_search_black"
+                style="@style/Base.Widget.AppCompat.Button.Borderless" />
+
+        </LinearLayout>
+
     </LinearLayout>
+
 </LinearLayout>

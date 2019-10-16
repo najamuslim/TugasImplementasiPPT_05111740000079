@@ -1,147 +1,112 @@
 package com.example.googlemapsapp;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.fragment.app.FragmentActivity;
-
-import android.content.Intent;
+import androidx.core.app.ActivityCompat;
+import android.Manifest;
+import android.content.Context;
+import android.content.pm.PackageManager;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.material.bottomsheet.BottomSheetBehavior;
 
 import java.io.IOException;
 import java.util.List;
 
-public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback {
+public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback, View.OnClickListener {
+
+    private static final int TAG_CODE_PERMISSION_LOCATION = 1;
+    private EditText etLatitude, etLongitude, etZoom, etAddress;
+    private ImageButton btnGo, btnSearch;
+
 
     private GoogleMap mMap;
-    Button btnDetect;
+    private Marker marker;
+    private float zoom = 15f;
+
+    private TextView tvLatitude, tvLongitude;
+
+    private LocationManager locationManager;
+    private Location currentLocation;
+    private MyLocationListener locationListener;
+    private Marker currentMarker;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
+
+        initView();
+        initOnClick();
+        checkLocationPermission();
+
+        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+
+        locationListener = new MyLocationListener();
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 200, 1, locationListener);
+
+        // Init current location
+        currentLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        tvLatitude.setText(String.valueOf(currentLocation.getLatitude()));
+        tvLongitude.setText(String.valueOf(currentLocation.getLongitude()));
+
+
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
-
-        btnDetect = findViewById(R.id.btnDetectMe);
-        btnDetect.setOnClickListener(op);
-
-        Button go = (Button) findViewById(R.id.idGo);
-        go.setOnClickListener(op);
-
-        Button cari = (Button) findViewById(R.id.idCari);
-        cari.setOnClickListener(op);
     }
 
-    View.OnClickListener op = new View.OnClickListener() {
-        @Override
-        public void onClick(View view) {
-            switch (view.getId()){
-                case R.id.idGo:sembunyikanKeyBoard(view);
-                    gotoLokasi();break;
-                case R.id.idCari:
-                    goCari();break;
-                case R.id.btnDetectMe:
-                    startActivity(new Intent(MapsActivity.this, DetectMeActivity.class));
-                    break;
-            }
-        }
-    };
+    private void initView() {
 
-    private void goCari() {
-        EditText tempat = (EditText) findViewById(R.id.idDaerah);
-        if (tempat.getText().toString().isEmpty()) {
-            Toast.makeText(this, "Harap mengisi isian search!", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        EditText zoom = (EditText) findViewById(R.id.idZoom);
-        EditText lat = (EditText) findViewById(R.id.idLokasiLat);
-        EditText lng = (EditText) findViewById(R.id.idLokasiLng);
-        if(zoom.getText().toString().isEmpty() || lat.getText().toString().isEmpty() || lng.getText().toString().isEmpty()) {
-            Toast.makeText(this, "Harap mengisi isian zoom, latitude dan longitude!", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        else {
+        tvLatitude = findViewById(R.id.tvLatitude);
+        tvLongitude = findViewById(R.id.tvLongitude);
 
-        }
-        try {
-            Geocoder g = new Geocoder(getBaseContext());
-            List<android.location.Address> daftar = g.getFromLocationName(tempat.getText().toString(), 1);
-            Address alamat = daftar.get(0);
-            String nemuAlamat = alamat.getAddressLine(0);
-            Double lintang = alamat.getLatitude();
-            Double bujur = alamat.getLongitude();
-
-            Toast.makeText(getBaseContext(),"Ketemu " + nemuAlamat,Toast.LENGTH_LONG).show();
-
-            Toast.makeText(this,"Move to "+ nemuAlamat +" Lat:" +
-
-
-                    lintang + " Long:" +bujur,Toast.LENGTH_LONG).show();
-
-            Float dblzoom = Float.parseFloat(zoom.getText().toString());
-            gotoPeta(lintang,bujur,dblzoom);
-            Double dbllat = Double.parseDouble(lat.getText().toString());
-            Double dbllng = Double.parseDouble(lng.getText().toString());
-            hitungJarak(dbllat,dbllng,lintang,bujur);
-            lat.setText(lintang.toString());
-            lng.setText(bujur.toString());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        etLatitude = findViewById(R.id.etLatitude);
+        etLongitude = findViewById(R.id.etLongitude);
+        etZoom = findViewById(R.id.etZoom);
+        etAddress = findViewById(R.id.etAddress);
+        btnGo = findViewById(R.id.btnGo);
+        btnSearch = findViewById(R.id.btnSearch);
     }
 
-    private void hitungJarak(double latAsal, Double lngAsal, double latTujuan, double lngTujuan)
-    {
-        Location asal = new Location("asal");
-        Location tujuan = new Location("tujuan");
-        tujuan.setLatitude(latTujuan);
-        tujuan.setLatitude(lngTujuan);
-        asal.setLatitude(latAsal);
-        asal.setLongitude(lngTujuan);
-        float jarak = (float) asal.distanceTo(tujuan)/1000;
-        String jaraknya = String.valueOf(jarak);
-        Toast.makeText(getBaseContext(), "jarak : " + jaraknya +" km ",
-
-                Toast.LENGTH_LONG).show();
+    private void initOnClick() {
+        btnGo.setOnClickListener(this);
+        btnSearch.setOnClickListener(this);
     }
 
-        private void gotoLokasi() {
-            EditText lat = (EditText) findViewById(R.id.idLokasiLat);
-            EditText lng = (EditText) findViewById(R.id.idLokasiLng);
-            EditText zoom = (EditText) findViewById(R.id.idZoom);
-            if(zoom.getText().toString().isEmpty() || lat.getText().toString().isEmpty() || lng.getText().toString().isEmpty()) {
-                Toast.makeText(this, "Harap mengisi isian zoom, latitude dan longitude!", Toast.LENGTH_SHORT).show();
-                return;
-            }
-            try {
-                Double dbllat = Double.parseDouble(lat.getText().toString());
-                Double dbllng = Double.parseDouble(lng.getText().toString());
-                Float dblzoom = Float.parseFloat(zoom.getText().toString());
-                Toast.makeText(this, "Move to Lat:" + dbllat + " Long:"
-                        + dbllng, Toast.LENGTH_LONG).show();
-                gotoPeta(dbllat, dbllng, dblzoom);
-            } catch (Exception e){
-                e.printStackTrace();
+    private void checkLocationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this, new String[] {
+                                Manifest.permission.ACCESS_FINE_LOCATION,
+                                Manifest.permission.ACCESS_COARSE_LOCATION },
+                        TAG_CODE_PERMISSION_LOCATION);
             }
         }
-
+    }
 
     /**
      * Manipulates the map once available.
@@ -156,39 +121,141 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
 
-        // Add a marker in Sydney and move the camera
-        LatLng ITS = new LatLng(-7.28,112.79);
-        gotoPeta(-7.28,112.79,15);
-        mMap.addMarker(new MarkerOptions().position(ITS).title("Marker in ITS"));
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(ITS,15));
+//        mMap.setMyLocationEnabled(true);
+//        mMap.getUiSettings().setMyLocationButtonEnabled(true);
+        currentMarker = mMap.addMarker(new MarkerOptions()
+                .position(new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude()))
+                .title("My Location")
+                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)));
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude()), zoom));
+    }
+
+    public void searchAddress(String address) {
+        Geocoder geocoder = new Geocoder(getBaseContext());
+        List<Address> addresses = null;
+        try {
+            addresses = geocoder.getFromLocationName(address, 1);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        Address location = null;
+        if (addresses != null && addresses.size() > 0) {
+            location = addresses.get(0);
+        } else {
+            Toast.makeText(this, "Address not found!", Toast.LENGTH_SHORT).show();
+        }
+
+        if (location != null) {
+            Toast.makeText(this, location.getAddressLine(0), Toast.LENGTH_SHORT).show();
+            goToLocation(location.getLatitude(), location.getLongitude(), zoom);
+        }
+    }
+
+    public void goToLocation(double latitude, double longitude, float zoom) {
+        try {
+            LatLng pos = new LatLng(latitude, longitude);
+            if (marker != null)
+                marker.remove();
+            marker = mMap.addMarker(new MarkerOptions().position(pos).title("Current Marker"));
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(pos, zoom));
+        } catch (Exception e){
+            e.printStackTrace();
+        }
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu,menu);
-        return super.onCreateOptionsMenu(menu);
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.btnGo:
+                String mLatitude = etLatitude.getText().toString();
+                String mLongitude = etLongitude.getText().toString();
+                String mZoom = etZoom.getText().toString();
+
+                if (!mLatitude.isEmpty() && !mLongitude.isEmpty()) {
+                    double lat = Double.parseDouble(etLatitude.getText().toString());
+                    double lng = Double.parseDouble(etLongitude.getText().toString());
+
+                    float z = zoom;
+                    if (!mZoom.isEmpty())
+                        z = Float.parseFloat(etZoom.getText().toString());
+
+                    goToLocation(lat, lng, z);
+                }
+
+                break;
+
+            case R.id.btnSearch:
+                String address = etAddress.getText().toString();
+                if (!address.isEmpty()) {
+                    searchAddress(address);
+                }
+        }
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()){
-            case R.id.normal : mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL); break;
-            case R.id.terrain: mMap.setMapType(GoogleMap.MAP_TYPE_TERRAIN);break;
-            case R.id.sattelite: mMap.setMapType(GoogleMap.MAP_TYPE_SATELLITE);break;
-            case R.id.hibryd: mMap.setMapType(GoogleMap.MAP_TYPE_HYBRID);break;
-            case R.id.none:mMap.setMapType(GoogleMap.MAP_TYPE_NONE);break;
+        switch (item.getItemId()) {
+            case R.id.normal:
+                mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
+                break;
+
+            case R.id.hybrid:
+                mMap.setMapType(GoogleMap.MAP_TYPE_HYBRID);
+                break;
+
+            case R.id.terrain:
+                mMap.setMapType(GoogleMap.MAP_TYPE_TERRAIN);
+                break;
+
+            case R.id.satellite:
+                mMap.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
+                break;
+
+            case R.id.none:
+                mMap.setMapType(GoogleMap.MAP_TYPE_NONE);
+                break;
         }
+
         return super.onOptionsItemSelected(item);
     }
 
-    private void sembunyikanKeyBoard(View v){
-        InputMethodManager a = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
-        a.hideSoftInputFromWindow(v.getWindowToken(),0);
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu, menu);
+        return super.onCreateOptionsMenu(menu);
     }
 
-    private void gotoPeta(Double lat, Double lng, float z){
-        LatLng Lokasibaru = new LatLng(lat,lng);
-        mMap.addMarker(new MarkerOptions().position(Lokasibaru).title("Marker in " +lat +":" +lng));
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(Lokasibaru,z));
+    private class MyLocationListener implements LocationListener {
+
+        @Override
+        public void onLocationChanged(Location location) {
+            currentLocation = location;
+            tvLatitude.setText(String.valueOf(currentLocation.getLatitude()));
+            tvLongitude.setText(String.valueOf(currentLocation.getLongitude()));
+
+            //mMap.addMarker(new MarkerOptions().position(new LatLng(location.getLatitude(), location.getLongitude())));
+
+            if (currentMarker != null)
+                currentMarker.remove();
+            /*currentMarker = mMap.addMarker(new MarkerOptions()
+                    .position(new LatLng(location.getLatitude(), location.getLongitude()))
+                    .title("My Location")
+                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)));*/
+        }
+
+        @Override
+        public void onStatusChanged(String provider, int status, Bundle extras) {
+
+        }
+
+        @Override
+        public void onProviderEnabled(String provider) {
+
+        }
+
+        @Override
+        public void onProviderDisabled(String provider) {
+
+        }
     }
 }
