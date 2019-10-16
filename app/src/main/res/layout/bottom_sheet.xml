@@ -123,12 +123,12 @@
 
         <EditText
             android:id="@+id/etAddress"
-            android:layout_width="0dp"
+            android:layout_width="347dp"
             android:layout_height="wrap_content"
-            android:padding="16dp"
-            android:hint="Cari Alamat"
             android:layout_weight="1"
-            android:textSize="18sp"/>
+            android:hint="Cari Alamat"
+            android:padding="16dp"
+            android:textSize="18sp" />
 
         <ImageButton
             android:id="@+id/btnSearch"
